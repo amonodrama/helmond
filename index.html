@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HELMOND</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family:Georgia, sans-serif;
+            background: #0a0000;
+            color: #ff4444;
+            overflow-x: hidden;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(to bottom, rgba(10,0,0,0.0), rgba(10,0,0,0.0));
+        }
+
+        h1 {
+            font-size: 5rem;
+            color: #ff0000;
+            text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000, 0 0 60px #ff0000;
+            margin-bottom: 1rem;
+            letter-spacing: 0.3em;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
+            50% { text-shadow: 0 0 30px #ff0000, 0 0 60px #ff0000, 0 0 80px #ff0000; }
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: #ffcccc;
+            text-shadow: 0 0 10px #ff0000;
+            letter-spacing: 0.2em;
+        }
+
+        section {
+            min-height: 100vh;
+            padding: 4rem 2rem;
+            background: rgba(10, 0, 0, 0.0);
+            margin: 2rem 0;
+        }
+
+        .section-title {
+            font-size: 3rem;
+            color: #ff3333;
+            opacity: 0;
+            text-align: center;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 20px #ff0000;
+
+        }
+
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #ffcccc;
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
+        }
+
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .member-card {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.5), rgba(70, 0, 0, 0.5));
+            padding: 2rem;
+            border-radius: 10px;
+            border: 2px solid #ff0000;
+            text-align: center;
+            transition: all 0.3s;
+            opacity: 0;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .member-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.6);
+            border-color: #ff4444;
+        }
+
+        .member-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(40, 0, 0, 0.9), rgba(20, 0, 0, 0.9));
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+
+        .member-name {
+            font-size: 2rem;
+            color: #ff3333;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .member-role {
+            color: #ffcccc;
+            font-size: 1.2rem;
+            letter-spacing: 0.1em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            max-width: 1000px;
+            margin: 4rem auto;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 2rem;
+            opacity: 0;
+            background: rgba(139, 0, 0, 0.3);
+            border: 2px solid #ff0000;
+            border-radius: 10px;
+            min-width: 200px;
+            transition: all 0.3s;
+        }
+
+        .stat-box:hover {
+            background: rgba(139, 0, 0, 0.5);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            color: #ff3333;
+            text-shadow: 0 0 20px #ff0000;
+        }
+
+        .stat-label {
+            font-size: 1.2rem;
+            color: #ffcccc;
+            margin-top: 0.5rem;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(20px); }
+        }
+
+        .scroll-indicator::before {
+            content: "⬇";
+            font-size: 2rem;
+            color: #ff0000;
+            text-shadow: 0 0 20px #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div class="content">
+        <header>
+            <h1 id="title">HELMOND</h1>
+            <p class="subtitle" id="title">REAPERS OF HELL</p>
+            <div class="scroll-indicator"></div>
+        </header>
+
+        <section id="about">
+            <h2 class="section-title">HAKKIMIZDA</h2>
+            <div class="about-content">
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <br>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number">666</div>
+                    <div class="stat-label">Krallık</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">666</div>
+                    <div class="stat-label">Savaş</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">666</div>
+                    <div class="stat-label">Üye</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="members">
+            <h2 class="section-title">ÜYELER</h2>
+            <div class="members-grid">
+                <div class="member-card">
+                    <div class="member-avatar">⚔️</div>
+                    <div class="member-name">1111111</div>
+                    <div class="member-role">Bedensel</div>
+                </div>
+                <div class="member-card">
+                    <div class="member-avatar">🗡️</div>
+                    <div class="member-name">2222222</div>
+                    <div class="member-role">Bıçakcı</div>
+                </div>
+                <div class="member-card">
+                    <div class="member-avatar">🪭</div>
+                    <div class="member-name">444444</div>
+                    <div class="member-role">Şaman</div>
+                </div>
+                <div class="member-card">
+                    <div class="member-avatar">💀</div>
+                    <div class="member-name">444444444</div>
+                    <div class="member-role">Karabüyü</div>
+                </div>
+                <div class="member-card">
+                    <div class="member-avatar">👹</div>
+                    <div class="member-name">HHHHHHH</div>
+                    <div class="member-role">Çözmeci</div>
+                </div>
+                <div class="member-card">
+                    <div class="member-avatar">🏹</div>
+                    <div class="member-name">EYUBBBB</div>
+                    <div class="member-role">Okçu</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let scene, camera, renderer, ground, trees, rocks, skulls, particles, ash, fog;
+        let scrollY = 0;
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f0000);
+            scene.fog = new THREE.FogExp2(0x1a0000, 0.02);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 8, 25);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            const groundGeometry = new THREE.PlaneGeometry(200, 200, 50, 50);
+            const groundVertices = groundGeometry.attributes.position.array;
+            
+            for (let i = 0; i < groundVertices.length; i += 3) {
+                const x = groundVertices[i];
+                const y = groundVertices[i + 1];
+                groundVertices[i + 2] = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 1.5 + Math.random() * 0.5;
+            }
+            groundGeometry.computeVertexNormals();
+
+            const groundMaterial = new THREE.MeshStandardMaterial({
+                color: 0x1a0000,
+                roughness: 0.95,
+                metalness: 0.1,
+                flatShading: true
+            });
+
+            ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -5;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            const crackGeometry = new THREE.PlaneGeometry(200, 200, 40, 40);
+            const crackMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff3300,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending
+            });
+            
+            const cracks = new THREE.Mesh(crackGeometry, crackMaterial);
+            cracks.rotation.x = -Math.PI / 2;
+            cracks.position.y = -4.9;
+            scene.add(cracks);
+
+            // agac
+            trees = new THREE.Group();
+            for (let i = 0; i < 40; i++) {
+                const treeGroup = new THREE.Group();
+                
+                const trunkHeight = 4 + Math.random() * 6;
+                const trunkGeometry = new THREE.CylinderGeometry(0.1, 0.4, trunkHeight, 6);
+                const trunkMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x0d0000,
+                    roughness: 0.9,
+                    metalness: 0.1
+                });
+                
+                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                trunk.castShadow = true;
+                trunk.position.y = trunkHeight / 2 - 5;
+                
+                const twistAmount = Math.random() * 0.8;
+                trunk.rotation.z = (Math.random() - 0.5) * twistAmount;
+                
+                treeGroup.add(trunk);
+                
+                // dal
+                const branchCount = 3 + Math.floor(Math.random() * 4);
+                for (let j = 0; j < branchCount; j++) {
+                    const branchLength = 1 + Math.random() * 2;
+                    const branchGeometry = new THREE.CylinderGeometry(0.05, 0.12, branchLength, 5);
+                    const branch = new THREE.Mesh(branchGeometry, trunkMaterial);
+                    
+                    branch.position.y = trunk.position.y + (j / branchCount) * trunkHeight - trunkHeight / 3;
+                    branch.position.x = (Math.random() - 0.5) * 0.5;
+                    branch.rotation.z = (Math.random() - 0.5) * 2;
+                    branch.rotation.y = Math.random() * Math.PI * 2;
+                    branch.castShadow = true;
+                    
+                    treeGroup.add(branch);
+                    
+
+                    if (Math.random() > 0.5) {
+                        const subBranchGeometry = new THREE.CylinderGeometry(0.03, 0.06, 0.8, 4);
+                        const subBranch = new THREE.Mesh(subBranchGeometry, trunkMaterial);
+                        subBranch.position.y = branchLength / 2;
+                        subBranch.rotation.z = Math.random() - 0.5;
+                        branch.add(subBranch);
+                    }
+                }
+                
+                const angle = (i / 40) * Math.PI * 2;
+                const radius = 15 + Math.random() * 30;
+                treeGroup.position.x = Math.cos(angle) * radius;
+                treeGroup.position.z = Math.sin(angle) * radius;
+                treeGroup.rotation.y = Math.random() * Math.PI * 2;
+                
+                trees.add(treeGroup);
+            }
+            scene.add(trees);
+
+            rocks = new THREE.Group();
+            for (let i = 0; i < 50; i++) {
+                const rockGeometry = new THREE.DodecahedronGeometry(0.5 + Math.random() * 1.5, 0);
+                const rockMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x2a0a0a,
+                    roughness: 0.95,
+                    flatShading: true
+                });
+                
+                const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+                rock.position.x = (Math.random() - 0.5) * 80;
+                rock.position.z = (Math.random() - 0.5) * 80;
+                rock.position.y = -5 + Math.random() * 3;
+                rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                rock.scale.set(1 + Math.random(), 0.5 + Math.random() * 0.5, 1 + Math.random());
+                rock.castShadow = true;
+                rock.receiveShadow = true;
+                
+                rocks.add(rock);
+            }
+            scene.add(rocks);
+
+            skulls = new THREE.Group();
+            for (let i = 0; i < 25; i++) {
+                const skullGroup = new THREE.Group();
+                
+                const skullGeometry = new THREE.SphereGeometry(0.3, 12, 12);
+                const skullMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x3a2a2a,
+                    roughness: 0.7
+                });
+                const skull = new THREE.Mesh(skullGeometry, skullMaterial);
+                skull.scale.set(1, 1.2, 1);
+                skullGroup.add(skull);
+                
+                const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+                const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+                
+                const eye1 = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                eye1.position.set(-0.12, 0.08, 0.25);
+                skullGroup.add(eye1);
+                
+                const eye2 = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                eye2.position.set(0.12, 0.08, 0.25);
+                skullGroup.add(eye2);
+                
+                skullGroup.position.x = (Math.random() - 0.5) * 60;
+                skullGroup.position.z = (Math.random() - 0.5) * 60;
+                skullGroup.position.y = -4.5;
+                skullGroup.rotation.y = Math.random() * Math.PI * 2;
+                skullGroup.rotation.z = (Math.random() - 0.5) * 0.5;
+                
+                skullGroup.castShadow = true;
+                skulls.add(skullGroup);
+            }
+            scene.add(skulls);
+
+            const ashGeometry = new THREE.BufferGeometry();
+            const ashCount = 3000;
+            const ashPositions = new Float32Array(ashCount * 3);
+            const ashColors = new Float32Array(ashCount * 3);
+
+            for (let i = 0; i < ashCount * 3; i += 3) {
+                ashPositions[i] = (Math.random() - 0.5) * 100;
+                ashPositions[i + 1] = Math.random() * 50 - 10;
+                ashPositions[i + 2] = (Math.random() - 0.5) * 100;
+
+                const isEmber = Math.random() > 0.7;
+                if (isEmber) {
+                    ashColors[i] = 1;
+                    ashColors[i + 1] = 0.3 + Math.random() * 0.3;
+                    ashColors[i + 2] = 0;
+                } else {
+                    const gray = 0.2 + Math.random() * 0.2;
+                    ashColors[i] = gray;
+                    ashColors[i + 1] = gray;
+                    ashColors[i + 2] = gray;
+                }
+            }
+
+            ashGeometry.setAttribute('position', new THREE.BufferAttribute(ashPositions, 3));
+            ashGeometry.setAttribute('color', new THREE.BufferAttribute(ashColors, 3));
+
+            const ashMaterial = new THREE.PointsMaterial({
+                size: 0.15,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending
+            });
+
+            particles = new THREE.Points(ashGeometry, ashMaterial);
+            scene.add(particles);
+
+            const fogGeometry = new THREE.BufferGeometry();
+            const fogCount = 1000;
+            const fogPositions = new Float32Array(fogCount * 3);
+
+            for (let i = 0; i < fogCount * 3; i += 3) {
+                fogPositions[i] = (Math.random() - 0.5) * 150;
+                fogPositions[i + 1] = Math.random() * 30 - 10;
+                fogPositions[i + 2] = (Math.random() - 0.5) * 150;
+            }
+
+            fogGeometry.setAttribute('position', new THREE.BufferAttribute(fogPositions, 3));
+
+            const fogMaterial = new THREE.PointsMaterial({
+                size: 3,
+                color: 0x330000,
+                transparent: true,
+                opacity: 0.15,
+                blending: THREE.NormalBlending,
+                depthWrite: false
+            });
+
+            fog = new THREE.Points(fogGeometry, fogMaterial);
+            scene.add(fog);
+
+            const ambientLight = new THREE.AmbientLight(0x330000, 0.4);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xff2200, 0.8);
+            directionalLight.position.set(10, 30, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.left = -50;
+            directionalLight.shadow.camera.right = 50;
+            directionalLight.shadow.camera.top = 50;
+            directionalLight.shadow.camera.bottom = -50;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            const pointLight1 = new THREE.PointLight(0xff0000, 2, 40);
+            pointLight1.position.set(-15, 2, -10);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(0xff3300, 2, 40);
+            pointLight2.position.set(15, 2, -10);
+            scene.add(pointLight2);
+
+            const pointLight3 = new THREE.PointLight(0xff0000, 1.5, 30);
+            pointLight3.position.set(0, 1, 20);
+            scene.add(pointLight3);
+
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('scroll', onScroll);
+
+            animate();
+        }
+
+        function onScroll() {
+            scrollY = window.scrollY;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = Date.now() * 0.001;
+            const scroll = scrollY * 0.001;
+
+            trees.rotation.y = scroll * 0.1 * 0.02;
+            trees.position.y = -scroll * 1.5;
+
+            rocks.rotation.y = scroll * 0.05;
+            rocks.position.y = -scroll * 1.2;
+
+            skulls.rotation.y = -scroll * 0.08;
+            skulls.position.y = -scroll * 1;
+
+            const ashPos = particles.geometry.attributes.position.array;
+            for (let i = 1; i < ashPos.length; i += 3) {
+                ashPos[i] += 0.02 + Math.sin(time * 2 + ashPos[i]) * 0.01;
+                ashPos[i] += Math.sin(time + ashPos[i - 1]) * 0.005;
+                
+                if (ashPos[i] > 40) {
+                    ashPos[i] = -10;
+                    ashPos[i - 1] = (Math.random() - 0.5) * 100;
+                    ashPos[i + 1] = (Math.random() - 0.5) * 100;
+                }
+            }
+            particles.geometry.attributes.position.needsUpdate = true;
+            particles.rotation.y = time * 0.02;
+
+            fog.rotation.y = time * 0.01;
+            fog.rotation.x = Math.sin(time * 0.5) * 0.05;
+
+            const crackMesh = scene.children.find(child => 
+                child.material && child.material.color && child.material.color.r > 0.5
+            );
+            if (crackMesh) {
+                crackMesh.material.opacity = 0.4 + Math.sin(time * 2) * 0.2;
+            }
+
+            camera.position.y = 8 + scroll * 3;
+            camera.position.z = 25 - scroll * 2;
+            camera.lookAt(0, scroll * 2, 0);
+
+            renderer.render(scene, camera);
+        }
+
+        init();
+        // Anime.js
+        anime({
+            targets: '#title',
+            opacity: [0, 1],
+            translateY: [50, 0],
+            duration: 2000,
+            easing: 'spring',
+            delay: 500
+        });
+
+        const observerOptions = {
+            threshold: 0.2
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    anime({
+                        targets: entry.target,
+                        opacity: [0, 1],
+                        translateY: [50, 0],
+                        duration: 2000,
+                        easing: 'spring',
+                        delay: 500
+                    });
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.member-card').forEach(card => {
+            observer.observe(card);
+        });
+
+        document.querySelectorAll('.section-title').forEach(card => {
+            observer.observe(card);
+        });
+
+        document.querySelectorAll('.about-content').forEach(card => {
+            observer.observe(card);
+        });
+
+        document.querySelectorAll('.stat-box').forEach(card => {
+            observer.observe(card);
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
